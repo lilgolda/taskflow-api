@@ -14,7 +14,7 @@ API REST para gestionar **usuarios, equipos y tareas** en equipo. Construida con
 1. Clona el repositorio e instala las dependencias:
 
    ```bash
-   git clone <URL-DEL-REPOSITORIO>
+   git clone https://github.com/lilgolda/taskflow-api.git
    cd taskflow-api
    npm install
    ```
