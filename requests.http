@@ -1,0 +1,274 @@
+# ============================================================
+#  TaskFlow API - Colección de pruebas (extensión REST Client de VS Code)
+#  Ejecuta las peticiones de arriba hacia abajo con "Send Request".
+#  Los ids se guardan solos en variables.
+# ============================================================
+
+@baseUrl = http://localhost:3000/api
+
+### Estado de la API
+GET http://localhost:3000/
+
+
+# ============================================================
+#  EQUIPOS
+# ============================================================
+
+### Crear equipo (POST)
+# @name createTeam
+POST {{baseUrl}}/teams
+Content-Type: application/json
+
+{
+  "name": "Equipo Frontend",
+  "description": "Interfaz de usuario de TaskFlow"
+}
+
+###
+@teamId = {{createTeam.response.body.$.data._id}}
+
+### Listar equipos (GET)
+GET {{baseUrl}}/teams
+
+### Obtener un equipo con sus miembros (GET)
+GET {{baseUrl}}/teams/{{teamId}}
+
+### Actualizar equipo (PUT)
+PUT {{baseUrl}}/teams/{{teamId}}
+Content-Type: application/json
+
+{
+  "description": "Interfaz de usuario y experiencia de TaskFlow"
+}
+
+
+# ============================================================
+#  USUARIOS
+# ============================================================
+
+### Crear usuario en el equipo (POST)
+# @name createUser
+POST {{baseUrl}}/users
+Content-Type: application/json
+
+{
+  "name": "Ana Pérez",
+  "email": "ana@taskflow.com",
+  "role": "admin",
+  "team": "{{teamId}}"
+}
+
+###
+@userId = {{createUser.response.body.$.data._id}}
+
+### Listar usuarios (GET)
+GET {{baseUrl}}/users
+
+### Listar usuarios filtrando por equipo (GET)
+GET {{baseUrl}}/users?team={{teamId}}
+
+### Obtener un usuario (GET)
+GET {{baseUrl}}/users/{{userId}}
+
+### Actualizar usuario (PUT)
+PUT {{baseUrl}}/users/{{userId}}
+Content-Type: application/json
+
+{
+  "name": "Ana María Pérez"
+}
+
+
+# ============================================================
+#  TAREAS
+# ============================================================
+
+### Crear tarea 1 (POST)
+# @name createTask1
+POST {{baseUrl}}/tasks
+Content-Type: application/json
+
+{
+  "title": "Diseñar pantalla de login",
+  "description": "Crear el diseño del formulario de inicio de sesión",
+  "status": "todo",
+  "priority": 4,
+  "dueDate": "2026-10-20",
+  "team": "{{teamId}}",
+  "assignedTo": "{{userId}}"
+}
+
+###
+@taskId = {{createTask1.response.body.$.data._id}}
+
+### Crear tarea 2 (POST)
+# @name createTask2
+POST {{baseUrl}}/tasks
+Content-Type: application/json
+
+{
+  "title": "Configurar rutas del proyecto",
+  "status": "in-progress",
+  "priority": 2,
+  "team": "{{teamId}}",
+  "assignedTo": "{{userId}}"
+}
+
+###
+@taskId2 = {{createTask2.response.body.$.data._id}}
+
+### Crear tarea 3 (POST)
+POST {{baseUrl}}/tasks
+Content-Type: application/json
+
+{
+  "title": "Escribir documentación",
+  "priority": 5,
+  "team": "{{teamId}}"
+}
+
+### Listar tareas (GET)
+GET {{baseUrl}}/tasks
+
+### Obtener una tarea (GET)
+GET {{baseUrl}}/tasks/{{taskId}}
+
+### Marcar tarea como terminada (PUT)
+PUT {{baseUrl}}/tasks/{{taskId}}
+Content-Type: application/json
+
+{
+  "status": "done"
+}
+
+### Actualizar otros campos de una tarea (PUT)
+PUT {{baseUrl}}/tasks/{{taskId2}}
+Content-Type: application/json
+
+{
+  "priority": 3,
+  "description": "Separar rutas, controladores y modelos"
+}
+
+### Eliminar una tarea (DELETE)
+DELETE {{baseUrl}}/tasks/{{taskId2}}
+
+
+# ============================================================
+#  CONSULTAS AVANZADAS
+# ============================================================
+
+### Filtros + orden + paginación (tareas pendientes, mayor prioridad primero)
+GET {{baseUrl}}/tasks?status=todo&sort=-priority&page=1&limit=10
+
+### Varios estados y orden por varios campos
+GET {{baseUrl}}/tasks?status=todo,in-progress&sort=-priority,dueDate&limit=5
+
+### Filtrar por equipo y buscar por título
+GET {{baseUrl}}/tasks?team={{teamId}}&search=login
+
+### Segunda página con 1 resultado por página
+GET {{baseUrl}}/tasks?sort=-priority&page=2&limit=1
+
+### Aggregation Pipeline: cantidad de tareas por estado de un equipo
+GET {{baseUrl}}/teams/{{teamId}}/task-stats
+
+
+# ============================================================
+#  ERRORES (para mostrar en el video)
+# ============================================================
+
+### 400 - Id con formato inválido
+GET {{baseUrl}}/tasks/abc123
+
+### 400 - Datos inválidos (varias validaciones fallan)
+POST {{baseUrl}}/users
+Content-Type: application/json
+
+{
+  "name": "A",
+  "email": "esto-no-es-un-email",
+  "role": "jefe"
+}
+
+### 400 - Estado inválido en una tarea
+POST {{baseUrl}}/tasks
+Content-Type: application/json
+
+{
+  "title": "Tarea con estado malo",
+  "status": "terminada",
+  "priority": 9,
+  "team": "{{teamId}}"
+}
+
+### 400 - Parámetro de consulta inválido
+GET {{baseUrl}}/tasks?status=terminada
+
+### 404 - Recurso que no existe (id válido pero inexistente)
+GET {{baseUrl}}/tasks/000000000000000000000000
+
+### 404 - Equipo referenciado que no existe
+POST {{baseUrl}}/users
+Content-Type: application/json
+
+{
+  "name": "Luis Gómez",
+  "email": "luis@taskflow.com",
+  "team": "000000000000000000000000"
+}
+
+### 409 - Email duplicado (ejecuta dos veces la creación de Ana, o esta petición)
+POST {{baseUrl}}/users
+Content-Type: application/json
+
+{
+  "name": "Otra Ana",
+  "email": "ana@taskflow.com",
+  "team": "{{teamId}}"
+}
+
+### 409 - Nombre de equipo duplicado
+POST {{baseUrl}}/teams
+Content-Type: application/json
+
+{
+  "name": "Equipo Frontend"
+}
+
+
+# ============================================================
+#  ELIMINAR USUARIO Y EQUIPO (DELETE) - ejecutar al final
+# ============================================================
+
+### Crear equipo temporal
+# @name createTempTeam
+POST {{baseUrl}}/teams
+Content-Type: application/json
+
+{
+  "name": "Equipo Temporal"
+}
+
+###
+@tempTeamId = {{createTempTeam.response.body.$.data._id}}
+
+### Crear usuario temporal
+# @name createTempUser
+POST {{baseUrl}}/users
+Content-Type: application/json
+
+{
+  "name": "Usuario Temporal",
+  "email": "temporal@taskflow.com",
+  "team": "{{tempTeamId}}"
+}
+
+###
+@tempUserId = {{createTempUser.response.body.$.data._id}}
+
+### Eliminar usuario (DELETE)
+DELETE {{baseUrl}}/users/{{tempUserId}}
+
+### Eliminar equipo (DELETE)
+DELETE {{baseUrl}}/teams/{{tempTeamId}}
