@@ -1,6 +1,6 @@
 # ============================================================
 #  TaskFlow API - Colección de pruebas (extensión REST Client de VS Code)
-#  Ejecuta las peticiones de arriba hacia abajo con "Send Request".
+#  Peticiones de arriba hacia abajo con "Send Request".
 #  Los ids se guardan solos en variables.
 # ============================================================
 

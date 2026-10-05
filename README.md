@@ -58,7 +58,7 @@ API REST para gestionar **usuarios, equipos y tareas** en equipo. Construida con
 | `MAX_POOL_SIZE` | No          | Tamaño máximo del pool de conexiones (por defecto 10)             | `10`                                      |
 | `NODE_ENV`      | No          | `development` o `production`                                       | `development`                             |
 
-> El archivo `.env` está en `.gitignore` y **nunca** se sube al repositorio. El archivo `.env.example` no contiene credenciales reales.
+> El archivo `.env.example` no contiene credenciales reales.
 
 ## Estructura del proyecto
 
